@@ -1,0 +1,20 @@
+<component name="libraryTable">
+  <library name="Influx-Java">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/annotations-13.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/converter-moshi-2.9.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/influxdb-java-2.22.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/kotlin-stdlib-1.4.10.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/kotlin-stdlib-jdk7-1.4.10.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/kotlin-stdlib-jdk8-1.4.10.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/logging-interceptor-4.9.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/moshi-1.8.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/msgpack-core-0.9.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/okhttp-4.9.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/okio-2.8.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/influx-java/retrofit-2.9.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
