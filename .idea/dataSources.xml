@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="Influx" read-only="true" uuid="51ff17c8-6744-475f-b75a-4ba7372b2a19">
+      <driver-ref>bab64598-f179-4107-be28-0056a857b002</driver-ref>
+      <synchronize>true</synchronize>
+      <configured-by-url>true</configured-by-url>
+      <jdbc-driver>net.suteren.jdbc.influxdb.InfluxDbDriver</jdbc-driver>
+      <jdbc-url>jdbc:influxdb:localhost:8086?db=One</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+      <keep-alive enable="true" />
+    </data-source>
+    <data-source source="LOCAL" name="Boat" uuid="2ebfca72-2cc9-4686-ad5a-9349e9d1dd4f">
+      <driver-ref>mariadb</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.mariadb.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mariadb://localhost:3307/Boat</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </component>
+</project>
