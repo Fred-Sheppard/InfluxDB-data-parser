@@ -4,8 +4,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+/**
+ * Class to combine two databases with a large number of entries
+ */
 public class SQLToSQLBatch {
 
+    /**
+     * The amount of entries to query with every iteration
+     */
     static final int LIMIT_PER_CALL = 100000;
 
     public static void main(String[] args) throws SQLException {
@@ -29,9 +35,12 @@ public class SQLToSQLBatch {
                     previousFinalTime, LIMIT_PER_CALL);
             ResultSet speedResults = statement.executeQuery(speedQuery);
             ArrayList<DataPoint> dataPoints = new ArrayList<>();
+            // If there are no more results, we are at the end of the database
             if (!speedResults.next()) {
                 break;
             }
+            // Do-while due to call of speedResults.next() above
+            // https://javarevisited.blogspot.com/2016/10/how-to-check-if-resultset-is-empty-in-Java-JDBC.html#axzz7mueiayIp
             do {
                 DataPoint point = new DataPoint();
                 // SQL indexes from 1
@@ -42,21 +51,16 @@ public class SQLToSQLBatch {
             } while (speedResults.next());
 
             ResultSet directionResults = statement.executeQuery(directionQuery);
-            if (!directionResults.next()) {
-                break;
-            }
-            int i = 0;
-            do {
+
+            for (int i = 0; directionResults.next(); i++) {
                 DataPoint point = dataPoints.get(i);
                 // SQL indexes from 1
                 point.setDirection(directionResults.getDouble(1));
-                i++;
-            } while (directionResults.next());
-
-            for (DataPoint point : dataPoints) {
-                builder.append(point);
             }
+
+            dataPoints.forEach(builder::append);
             int length = builder.length();
+            // Replace final ",\n" with  ";"
             builder.delete(length - 2, length);
             builder.append(";");
             try {
@@ -76,6 +80,11 @@ public class SQLToSQLBatch {
         System.out.println("Entries: " + entries);
     }
 
+    /**
+     * Clears the Boat/aggregate SQL table by dropping it and recreating it.
+     *
+     * @param statement Statement used to execute the query
+     */
     private static void clearTable(Statement statement) throws SQLException {
         System.out.println("Dropping table");
         statement.executeUpdate("DROP TABLE aggregate");
@@ -93,6 +102,9 @@ public class SQLToSQLBatch {
     }
 }
 
+/**
+ * Class to store time, direction and speed to be inputted to a single SQL database
+ */
 class DataPoint {
 
     private long epoch;
@@ -100,7 +112,6 @@ class DataPoint {
     private double speed;
 
     DataPoint() {
-
     }
 
     public long getEpoch() {
