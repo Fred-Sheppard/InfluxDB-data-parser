@@ -21,30 +21,18 @@ import java.util.Scanner;
 /**
  * Class to upload a large amount of data from InfluxDB to SQL
  */
-public class Batch {
+public class InfluxToSQLBatch {
 
     static final String DATABASE = "Influx 1";
-    static final int LIMIT_PER_CALL = 10;
+    static final int LIMIT_PER_CALL = 100000;
     static final String ORIGINAL_QUERY = """
-            SELECT * FROM "autogen"."environment.wind.speedTrue" WHERE "source"='derived-data'""";
+            SELECT * FROM "autogen"."environment.wind.directionTrue" WHERE "source"='derived-data'""";
 
 
     public static void main(String[] args) throws SQLException, RuntimeException, IOException {
         // This is a heavy operation that also clears the existing data from SQL
         // We need to ensure the user hasn't run this by error
-        System.out.println("This will clear the database. Proceed?");
-        Scanner input = new Scanner(System.in);
-        boolean valid = false;
-        while (!valid) {
-            System.out.println("Y/N?");
-            String s = input.nextLine().toLowerCase();
-            if (s.equals("y")) {
-                valid = true;
-            } else if (s.equals("n")) {
-                System.out.println("Cancelling");
-                System.exit(1);
-            }
-        }
+        validateContinue();
 
         PrintWriter logger = new PrintWriter(new BufferedWriter(new FileWriter("log.txt")));
         try (InfluxDB influx = InfluxDBFactory.connect("http://localhost:8086", "root", "0")) {
@@ -61,8 +49,10 @@ public class Batch {
             clearTable(sqlStatement);
 
             int counter = 0;
+            int iterator = 0;
             while (true) {
-                StringBuilder builder = new StringBuilder("INSERT INTO data (Epoch, WindSpeed) VALUES\n");
+                StringBuilder builder = new StringBuilder(
+                        "INSERT INTO data (Epoch, WindDir) VALUES\n");
                 try {
                     String query = String.format(
                             "%s and time > '%s' limit %d",
@@ -79,7 +69,8 @@ public class Batch {
                             if (counter++ % 5 != 0) {
                                 continue;
                             }
-                            double windSpeed = ((Double) value.get(4));
+                            double windSpeed = ((Double) value.get(4)) / (Math.PI * 2) * 360;
+
                             builder.append("(");
                             builder.append(time.toEpochSecond());
                             builder.append(",");
@@ -100,6 +91,7 @@ public class Batch {
                     // This will be the starting point for the next batch
                     String timeString = (String) values.get(values.size() - 1).get(0);
                     previousFinalTime = OffsetDateTime.parse(timeString);
+                    iterator++;
                 } catch (SQLException e) {
                     System.out.println(builder);
                     throw (e);
@@ -109,6 +101,8 @@ public class Batch {
             logger.flush();
             logger.close();
             System.out.println("\nFinished");
+            System.out.println("Calls: " + iterator);
+            System.out.println("Entries: " + counter);
         }
     }
 
@@ -148,10 +142,28 @@ public class Batch {
                     ID        int auto_increment
                         primary key,
                     Epoch     bigint null,
-                    WindDir   int    null,
+                    WindDir   float    null,
                     WindGust  float  null,
                     WindSpeed float  null
                 );
                 """);
+    }
+
+    public static void validateContinue() {
+        // This is a heavy operation that also clears the existing data from SQL
+        // We need to ensure the user hasn't run this by error
+        System.out.println("This will clear the database. Proceed?");
+        Scanner input = new Scanner(System.in);
+        boolean valid = false;
+        while (!valid) {
+            System.out.println("Y/N?");
+            String s = input.nextLine().toLowerCase();
+            if (s.equals("y")) {
+                valid = true;
+            } else if (s.equals("n")) {
+                System.out.println("Cancelling");
+                System.exit(0);
+            }
+        }
     }
 }

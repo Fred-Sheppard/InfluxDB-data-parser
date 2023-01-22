@@ -10,7 +10,7 @@
       <working-dir>$ProjectFileDir$</working-dir>
       <keep-alive enable="true" />
     </data-source>
-    <data-source source="LOCAL" name="Boat" uuid="2ebfca72-2cc9-4686-ad5a-9349e9d1dd4f">
+    <data-source source="LOCAL" name="Boat" read-only="true" uuid="2ebfca72-2cc9-4686-ad5a-9349e9d1dd4f">
       <driver-ref>mariadb</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.mariadb.jdbc.Driver</jdbc-driver>
