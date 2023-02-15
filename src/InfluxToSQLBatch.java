@@ -1,9 +1,6 @@
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
-import org.influxdb.dto.QueryResult;
-import org.influxdb.dto.QueryResult.Result;
-import org.influxdb.dto.QueryResult.Series;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -14,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -57,7 +53,7 @@ public class InfluxToSQLBatch {
                     String query = String.format(
                             "%s and time > '%s' limit %d",
                             ORIGINAL_QUERY, previousFinalTime.format(myPattern), LIMIT_PER_CALL);
-                    var values = getValues(influx.query(new Query(query)));
+                    var values = InfluxReader.getValues(influx.query(new Query(query)));
                     if (values == null) {
                         break;
                     }
@@ -106,25 +102,6 @@ public class InfluxToSQLBatch {
         }
     }
 
-    /**
-     * Returns a list of values from an Influx result set
-     *
-     * @param results The result of an Influx query
-     * @return A new flat-packed list of values from the query
-     */
-    private static ArrayList<List<Object>> getValues(QueryResult results) {
-        ArrayList<List<Object>> appendList = new ArrayList<>();
-        for (Result result : results.getResults()) {
-            List<Series> allSeries = result.getSeries();
-            if (allSeries == null) {
-                return null;
-            }
-            for (Series series : result.getSeries()) {
-                appendList.addAll(series.getValues());
-            }
-        }
-        return appendList;
-    }
 
     /**
      * Clears the Boat/data SQL table by dropping it and recreating it.

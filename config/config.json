@@ -1,0 +1,18 @@
+{
+  "Url": "http://localhost:8086",
+  "User": "root",
+  "Password": "0",
+  "Database": "Influx 1",
+  "LimitPerCall": 100000,
+  "StartDate": "1970-01-01T00:00:00.000Z",
+  "Metrics": {
+    "Speed": {
+      "Path": "environment.wind.speedTrue",
+      "cFactor": 1.94384
+    },
+    "Direction": {
+      "Path": "environment.wind.directionTrue",
+      "cFactor": 57.296
+    }
+  }
+}
