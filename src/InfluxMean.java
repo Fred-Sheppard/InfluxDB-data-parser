@@ -1,9 +1,12 @@
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
+import org.influxdb.InfluxDBIOException;
 import org.influxdb.dto.Query;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
@@ -20,8 +23,7 @@ class InfluxMean {
     /**
      * The query to execute to retrieve each datapoint.
      */
-    private static final String ORIGINAL_QUERY = """
-            SELECT * FROM "autogen"."%s" WHERE "source"='derived-data'""";
+    private static final String ORIGINAL_QUERY = "SELECT * FROM \"autogen\".\"%s\" WHERE \"source\"='derived-data'";
     /**
      * The amount of values to query in a single call. e.g. (limit 50).
      */
@@ -90,8 +92,23 @@ class InfluxMean {
                 writer.close();
                 Runtime.getRuntime().removeShutdownHook(shutdown);
             }
-
-            System.out.println("\nFinished");
+            System.out.println("\nProcess Completed. Exiting");
+            
+        } catch (InfluxDBIOException e) {
+            // Any errors to do with the database will throw InfluxDBIOException
+            // This method of handling allows the underlying cause to be discovered
+            // Nested exception handling learned from ChatGPT
+            try {
+                throw (e.getCause());
+            } catch (ConnectException connectException) {
+                System.err.printf("Could not connect to the database at %s. " +
+                        "Verify that the url, username and password are correct, " +
+                        "and that the database is running.", config.getString("Url"));
+            } catch (SocketTimeoutException socketTimeoutException) {
+                System.err.println("Database query timed out. Try reducing the batch rate in config/config.json");
+            } catch (Throwable throwable) {
+                throw new RuntimeException(throwable);
+            }
         }
     }
 
