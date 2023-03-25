@@ -2,8 +2,11 @@
   <artifact type="jar" name="Influx:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/Influx_jar</output-path>
     <root id="archive" name="Influx.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+      </element>
       <element id="module-output" name="Influx" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/json-20220924.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/mariadb-java-client-3.1.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/influx-java/annotations-13.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/influx-java/converter-moshi-2.9.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/influx-java/influxdb-java-2.22.jar" path-in-jar="/" />
@@ -16,6 +19,7 @@
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/influx-java/okhttp-4.9.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/influx-java/okio-2.8.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/influx-java/retrofit-2.9.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/json-20220924.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

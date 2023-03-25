@@ -32,6 +32,7 @@ class InfluxMean {
      * Formatter to allow InfluxDB times to be inputted.
      */
     private static DateTimeFormatter MY_PATTERN;
+    private static OffsetDateTime startTime;
 
     public static void main(String[] args) throws RuntimeException, IOException {
         // The path to the jar file
@@ -64,6 +65,8 @@ class InfluxMean {
             influx.setDatabase(database);
             // What datapoints should be queried
             JSONObject datapoints = config.getJSONObject("Metrics");
+            // Starting time
+            startTime = OffsetDateTime.parse(config.getString("StartDate"));
             File output = new File(PATH + "output/");
             // If there isn't already an output folder
             if (!output.exists()) {
@@ -121,13 +124,16 @@ class InfluxMean {
      * @param datapoint The datapoint to query
      * @param cFactor   The conversion factor to multiply values by e.g. m/s -> knts
      */
-    private static void findHourlyMeans(InfluxDB influx, PrintWriter writer, String datapoint, double cFactor) {
+    private static void findHourlyMeans(InfluxDB influx, PrintWriter writer, String datapoint, double cFactor) throws IOException {
+        // Init loop
         int totalCounter = 0;
         // Used for batching
-        OffsetDateTime previousFinalTime = OffsetDateTime.parse("1970-01-01T00:00:00.000Z");
+        OffsetDateTime previousFinalTime = startTime;
         OffsetDateTime currentHour = OffsetDateTime.from(previousFinalTime);
         double total = 0;
         int counter = 0;
+
+        // Begin batching loop
         while (true) {
             String query = String.format(
                     "%s and time > '%s' limit %d",
@@ -175,6 +181,10 @@ class InfluxMean {
             String timeString = (String) values.get(values.size() - 1).get(0);
             previousFinalTime = OffsetDateTime.parse(timeString);
         }
+        PrintWriter lastEntry = new PrintWriter(new BufferedWriter(new FileWriter("output/lastEntry_" + datapoint + ".txt")));
+        lastEntry.println(previousFinalTime);
+        lastEntry.flush();
+        lastEntry.close();
         System.out.println(". Finished");
     }
 }
