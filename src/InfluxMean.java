@@ -83,6 +83,8 @@ class InfluxMean {
                 JSONObject datapoint = datapoints.getJSONObject(key);
                 String outputFile = "output" + "/" + key + ".txt";
                 PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(outputFile)));
+                boolean isAngle = key.equals("environment.wind.directionTrue");
+
                 // If the program is interrupted, flush and save the file as-is
                 Thread shutdown = new Thread(() -> {
                     writer.flush();
@@ -90,13 +92,17 @@ class InfluxMean {
                     System.out.println("\nUnexpected shutdown, flushing to file");
                 });
                 Runtime.getRuntime().addShutdownHook(shutdown);
-                findHourlyMeans(influx, writer, datapoint.getString("Path"), datapoint.getDouble("cFactor"));
+
+                // Collect the data
+                findHourlyMeans(influx, writer, datapoint.getString("Path"),
+                        datapoint.getDouble("cFactor"), isAngle);
+                // Flush file, close hooks
                 writer.flush();
                 writer.close();
                 Runtime.getRuntime().removeShutdownHook(shutdown);
             }
             System.out.println("\nProcess Completed. Exiting");
-            
+
         } catch (InfluxDBIOException e) {
             // Any errors to do with the database will throw InfluxDBIOException
             // This method of handling allows the underlying cause to be discovered
@@ -105,8 +111,8 @@ class InfluxMean {
                 throw (e.getCause());
             } catch (ConnectException connectException) {
                 System.err.printf("Could not connect to the database at %s. " +
-                        "Verify that the url, username and password are correct, " +
-                        "and that the database is running.", config.getString("Url"));
+                                  "Verify that the url, username and password are correct, " +
+                                  "and that the database is running.", config.getString("Url"));
             } catch (SocketTimeoutException socketTimeoutException) {
                 System.err.println("Database query timed out. Try reducing the batch rate in config/config.json");
             } catch (Throwable throwable) {
@@ -124,7 +130,8 @@ class InfluxMean {
      * @param datapoint The datapoint to query
      * @param cFactor   The conversion factor to multiply values by e.g. m/s -> knts
      */
-    private static void findHourlyMeans(InfluxDB influx, PrintWriter writer, String datapoint, double cFactor) throws IOException {
+    private static void findHourlyMeans(InfluxDB influx, PrintWriter writer, String datapoint,
+                                        double cFactor, boolean isAngle) throws IOException {
         // Init loop
         int totalCounter = 0;
         // Used for batching
@@ -132,6 +139,8 @@ class InfluxMean {
         OffsetDateTime currentHour = OffsetDateTime.from(previousFinalTime);
         double total = 0;
         int counter = 0;
+        double x = 0;
+        double y = 0;
 
         // Begin batching loop
         while (true) {
@@ -146,7 +155,7 @@ class InfluxMean {
             if (values == null) {
                 break;
             }
-            for (List<Object> value : values) {
+            for (List<Object> entry : values) {
                 try {
                     /*
                     Get the time at the current entry.
@@ -154,19 +163,36 @@ class InfluxMean {
                         Save and output the current average.
                         Start outputting to the next hour.
                      */
-                    String timeString = (String) value.get(0);
+                    String timeString = (String) entry.get(0);
                     OffsetDateTime influxTime = OffsetDateTime.parse(timeString);
                     OffsetDateTime influxHours = influxTime.withMinute(0).withSecond(0).withNano(0);
-                    if (Duration.between(currentHour, influxHours).toHours() >= 1) {
-                        writer.println(currentHour + "," + total / counter);
-                        total = 0;
-                        counter = 0;
-                        currentHour = influxHours;
+                    if (isAngle) {
+                        // Write to file
+                        if (Duration.between(currentHour, influxHours).toHours() >= 1) {
+                            // https://stackoverflow.com/questions/5343629/averaging-angles
+                            int meanAngle = (int) Math.round(Math.toDegrees(Math.atan2(y, x)));
+                            writer.println(currentHour + "," + meanAngle);
+                            x = 0;
+                            y = 0;
+                            currentHour = influxHours;
+                        }
+                        // Angle already in radians
+                        double direction = (Double) entry.get(4);
+                        x += Math.cos(direction);
+                        y += Math.sin(direction);
+                    } else {
+                        // Write to file
+                        if (Duration.between(currentHour, influxHours).toHours() >= 1) {
+                            writer.println(currentHour + "," + total / counter);
+                            total = 0;
+                            counter = 0;
+                            currentHour = influxHours;
+                        }
+                        // Multiply the value by our conversion factor
+                        double metric = (Double) entry.get(4) * cFactor;
+                        total += metric;
+                        counter++;
                     }
-                    // Multiply the value by our conversion factor
-                    double metric = (Double) value.get(4) * cFactor;
-                    total += metric;
-                    counter++;
                     totalCounter++;
                 } catch (NullPointerException e) {
                     // Some values may be null
