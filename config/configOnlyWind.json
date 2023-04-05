@@ -6,10 +6,6 @@
   "LimitPerCall": 100000,
   "StartDate": "2023-01-15T00:00:00.000Z",
   "Metrics": {
-    "Speed": {
-      "Path": "environment.wind.speedTrue",
-      "cFactor": 1.94384
-    },
     "Direction": {
       "Path": "environment.wind.directionTrue",
       "cFactor": 57.296

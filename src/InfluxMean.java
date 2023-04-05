@@ -23,7 +23,7 @@ class InfluxMean {
     /**
      * The query to execute to retrieve each datapoint.
      */
-    private static final String ORIGINAL_QUERY = "SELECT * FROM \"autogen\".\"%s\" WHERE \"source\"='derived-data'";
+    private static final String ORIGINAL_QUERY = "SELECT time,value FROM \"autogen\".\"%s\" WHERE \"source\"='derived-data'";
     /**
      * The amount of values to query in a single call. e.g. (limit 50).
      */
@@ -83,7 +83,7 @@ class InfluxMean {
                 JSONObject datapoint = datapoints.getJSONObject(key);
                 String outputFile = "output" + "/" + key + ".txt";
                 PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(outputFile)));
-                boolean isAngle = key.equals("environment.wind.directionTrue");
+                boolean isAngle = key.equals("Direction");
 
                 // If the program is interrupted, flush and save the file as-is
                 Thread shutdown = new Thread(() -> {
@@ -149,6 +149,7 @@ class InfluxMean {
                     String.format(ORIGINAL_QUERY, datapoint),
                     previousFinalTime.format(MY_PATTERN),
                     LIMIT_PER_CALL);
+//            System.out.println(query);
             // Query the database
             var values = InfluxReader.getValues(influx.query(new Query(query)));
             // If there are no entries, we are finished
@@ -177,7 +178,7 @@ class InfluxMean {
                             currentHour = influxHours;
                         }
                         // Angle already in radians
-                        double direction = (Double) entry.get(4);
+                        double direction = (Double) entry.get(1);
                         x += Math.cos(direction);
                         y += Math.sin(direction);
                     } else {
@@ -189,7 +190,7 @@ class InfluxMean {
                             currentHour = influxHours;
                         }
                         // Multiply the value by our conversion factor
-                        double metric = (Double) entry.get(4) * cFactor;
+                        double metric = (Double) entry.get(1) * cFactor;
                         total += metric;
                         counter++;
                     }
